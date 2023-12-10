@@ -18,18 +18,18 @@ private fun getScore(k: Int, matrix: List<List<Int>>): Int {
 
     for (rows in matrix) {
         for (element in rows) {
-            map.merge(element, 1) { a, b -> a + b }
+            map.merge(element, 1) { oldValue, newValue -> oldValue + newValue }
         }
     }
 
     return map.values.count { it <= k * PLAYERS_NUMBER }
 }
 
-private fun readMatrix(): List<List<Int>> = buildList {
-    repeat(MATRIX_SIZE) {
-        add(readString().mapNotNull { char ->
+private fun readMatrix(): List<List<Int>> {
+    return (0 until MATRIX_SIZE).map {
+        readString().mapNotNull { char ->
             if (char != '.') char.toString().toInt() else null
-        })
+        }
     }
 }
 
