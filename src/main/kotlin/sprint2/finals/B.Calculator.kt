@@ -3,7 +3,7 @@ package sprint2.finals
 import java.util.Stack
 
 /*
- * https://contest.yandex.ru/contest/22781/run-report/103691000/
+ * https://contest.yandex.ru/contest/22781/run-report/103998610/
  *
  * Этот алгоритм реализует базовый калькулятор обратной польской записи с использованием стека из коробки.
  * Принцип работы:
@@ -29,29 +29,24 @@ import java.util.Stack
  * - Обычно размер стека меньше n, так как операторы уменьшают размер стека.
  */
 fun main() {
-    val signsMap = hashMapOf<String, (a: Int, b: Int) -> Int>()
-    signsMap["+"] = { a, b -> a + b }
-    signsMap["-"] = { a, b -> a - b }
-    signsMap["*"] = { a, b -> a * b }
-    signsMap["/"] = { a, b ->
-        if (a < 0 && b > 0 || a > 0 && b < 0) {
-            val result = a / b
-            if (a % b != 0) result - 1 else result
-        } else {
-            a / b
-        }
+    val operators = buildMap {
+        put("+") { a: Int, b: Int -> a + b }
+        put("-") { a: Int, b: Int -> a - b }
+        put("*") { a: Int, b: Int -> a * b }
+        put("/") { a: Int, b: Int -> Math.floorDiv(a, b) }
     }
 
     val stack = Stack<Int>()
 
     val input = readln().split(" ")
     for (s in input) {
-        if (signsMap.contains(s)) {
+        if (operators.containsKey(s)) {
             val last = stack.pop()
             val beforeLast = stack.pop()
-            signsMap[s]?.let { stack.push(it(beforeLast, last)) }
+            val operation = operators[s] ?: error("Operator '$s' is not supported")
+            stack.push(operation(beforeLast, last))
         } else {
-            stack.push(s.toInt())
+            stack.push(s.toIntOrNull() ?: error("Invalid input: '$s' is neither an integer nor a valid operator"))
         }
     }
     println(stack.peek())

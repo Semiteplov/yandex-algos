@@ -1,7 +1,9 @@
 package sprint2.finals
 
+import java.io.BufferedWriter
+
 /*
- * https://contest.yandex.ru/contest/22781/run-report/103687172/
+ * https://contest.yandex.ru/contest/22781/run-report/103998209/
  *
  * Алгоритм Deque (двусторонняя очередь) на основе кольцевого буфера
  *
@@ -40,44 +42,44 @@ class Deque(private val maxSize: Int) {
     private fun isFull() = size == maxSize
     private fun isEmpty() = size == 0
 
-    fun pushBack(value: Int): String? {
+    fun pushBack(value: Int): Boolean {
         if (isFull()) {
-            return "error"
+            return false
         }
         deque[back] = value
         back = (back + 1) % maxSize
         size++
-        return null
+        return true
     }
 
-    fun pushFront(value: Int): String? {
+    fun pushFront(value: Int): Boolean {
         if (isFull()) {
-            return "error"
+            return false
         }
         front = (front + maxIndex) % maxSize
         deque[front] = value
         size++
-        return null
+        return true
     }
 
-    fun popFront(): String {
+    fun popFront(): Int? {
         if (isEmpty()) {
-            return "error"
+            return null
         }
         val value = deque[front]
         front = (front + 1) % maxSize
         size--
-        return value.toString()
+        return value
     }
 
-    fun popBack(): String {
+    fun popBack(): Int? {
         if (isEmpty()) {
-            return "error"
+            return null
         }
         back = (back + maxIndex) % maxSize
         val value = deque[back]
         size--
-        return value.toString()
+        return value
     }
 }
 
@@ -86,19 +88,39 @@ fun main() {
     val reader = System.`in`.bufferedReader()
     val writer = System.out.bufferedWriter()
 
-    val commands = reader.readLine().toInt()
+    val commandCount = reader.readLine().toInt()
     val maxSize = reader.readLine().toInt()
     val deque = Deque(maxSize)
 
-    repeat(commands) {
+    repeat(commandCount) {
         val input = reader.readLine().split(" ")
         when (input[0]) {
-            "push_back" -> deque.pushBack(input[1].toInt())?.let { writer.write("$it\n") }
-            "push_front" -> deque.pushFront(input[1].toInt())?.let { writer.write("$it\n") }
-            "pop_front" -> writer.write("${deque.popFront()}\n")
-            "pop_back" -> writer.write("${deque.popBack()}\n")
+            "push_back" -> {
+                val result = deque.pushBack(input[1].toInt())
+                if (!result) writer.writeLine("error")
+            }
+
+            "push_front" -> {
+                val result = deque.pushFront(input[1].toInt())
+                if (!result) writer.writeLine("error")
+            }
+
+            "pop_front" -> {
+                val value = deque.popFront()
+                writer.writeLine("${value ?: "error"}")
+            }
+
+            "pop_back" -> {
+                val value = deque.popBack()
+                writer.writeLine("${value ?: "error"}")
+            }
         }
     }
 
     writer.flush()
+}
+
+fun BufferedWriter.writeLine(line: String) {
+    this.write(line)
+    this.newLine()
 }
