@@ -3,7 +3,7 @@ package sprint2.finals
 import java.util.Stack
 
 /*
- * https://contest.yandex.ru/contest/22781/run-report/103998610/
+ * https://contest.yandex.ru/contest/22781/run-report/104003778/
  *
  * Этот алгоритм реализует базовый калькулятор обратной польской записи с использованием стека из коробки.
  * Принцип работы:
@@ -40,13 +40,15 @@ fun main() {
 
     val input = readln().split(" ")
     for (s in input) {
-        if (operators.containsKey(s)) {
+        val operation = operators[s]
+
+        if (operation != null) {
             val last = stack.pop()
             val beforeLast = stack.pop()
-            val operation = operators[s] ?: error("Operator '$s' is not supported")
             stack.push(operation(beforeLast, last))
         } else {
-            stack.push(s.toIntOrNull() ?: error("Invalid input: '$s' is neither an integer nor a valid operator"))
+            val number = s.toIntOrNull() ?: error("Invalid input: '$s' is neither an integer nor a valid operator")
+            stack.push(number)
         }
     }
     println(stack.peek())

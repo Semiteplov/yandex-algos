@@ -3,7 +3,7 @@ package sprint2.finals
 import java.io.BufferedWriter
 
 /*
- * https://contest.yandex.ru/contest/22781/run-report/103998209/
+ * https://contest.yandex.ru/contest/22781/run-report/104003949/
  *
  * Алгоритм Deque (двусторонняя очередь) на основе кольцевого буфера
  *
@@ -97,22 +97,22 @@ fun main() {
         when (input[0]) {
             "push_back" -> {
                 val result = deque.pushBack(input[1].toInt())
-                if (!result) writer.writeLine("error")
+                if (!result) writer.writeError()
             }
 
             "push_front" -> {
                 val result = deque.pushFront(input[1].toInt())
-                if (!result) writer.writeLine("error")
+                if (!result) writer.writeError()
             }
 
             "pop_front" -> {
                 val value = deque.popFront()
-                writer.writeLine("${value ?: "error"}")
+                writer.writeLine(value?.toString() ?: "error")
             }
 
             "pop_back" -> {
                 val value = deque.popBack()
-                writer.writeLine("${value ?: "error"}")
+                writer.writeLine(value?.toString() ?: "error")
             }
         }
     }
@@ -123,4 +123,8 @@ fun main() {
 fun BufferedWriter.writeLine(line: String) {
     this.write(line)
     this.newLine()
+}
+
+fun BufferedWriter.writeError() {
+    this.writeLine("error")
 }
