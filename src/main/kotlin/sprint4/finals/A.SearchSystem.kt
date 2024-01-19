@@ -1,7 +1,7 @@
 package sprint4.finals
 
 /*
-    Report: https://contest.yandex.ru/contest/24414/run-report/105212685/
+    Report: https://contest.yandex.ru/contest/24414/run-report/105315516/
 
     -- ПРИНЦИП РАБОТЫ --
     Алгоритм заполняет таблицу (словарь) вида:
@@ -29,44 +29,46 @@ package sprint4.finals
     Так как каждое слово и каждый индекс документа хранятся в словаре, пространственная сложность составляет O(U + D),
     где U - количество уникальных слов, D - количество документов.
  */
-fun main() {
-    val documents = readStrings()
-    val queries = readStrings()
+class SearchSystem {
+    private val wordToDocFrequencyMap = mutableMapOf<String, MutableMap<Int, Int>>()
+    private val relevanceComparator = compareByDescending<Map.Entry<Int, Int>> { it.value }.thenBy { it.key }
 
-    val wordToDocFrequencyMap = mutableMapOf<String, MutableMap<Int, Int>>() // word : { document ID : frequency }
-
-    for (i in documents.indices) {
-        val words = documents[i].split(" ")
-
-        for (word in words) {
-            val currentMap = wordToDocFrequencyMap.getOrDefault(word, mutableMapOf())
-            currentMap[i] = currentMap.getOrDefault(i, 0) + 1
-            wordToDocFrequencyMap[word] = currentMap
+    fun addDocument(document: String, docIndex: Int) {
+        document.split(" ").forEach { word ->
+            val frequencies = wordToDocFrequencyMap.getOrPut(word) { mutableMapOf() }
+            frequencies.merge(docIndex, 1, Int::plus)
         }
     }
 
-
-    for (query in queries) {
+    fun processQuery(query: String): List<Int> {
         val relevance = mutableMapOf<Int, Int>()
 
-        val words = query.split(" ").toSet() // слова из запрса должны быть уникальными
-
-        for (word in words) {
-            val wordFrequencies = wordToDocFrequencyMap[word]
-            if (wordFrequencies != null) {
-                for ((docIndex, frequency) in wordFrequencies) {
-                    relevance[docIndex] = relevance.getOrDefault(docIndex, 0) + frequency
-                }
+        query.split(" ").distinct().forEach { word ->
+            wordToDocFrequencyMap[word]?.forEach { (docIndex, frequency) ->
+                relevance.merge(docIndex, frequency, Int::plus)
             }
         }
 
-        relevance.entries.sortedWith(compareByDescending<MutableMap.MutableEntry<Int, Int>> { it.value }.thenBy { it.key })
-            .take(5).forEach { print("${it.key + 1} ") }
-        println()
+        return relevance.entries
+            .sortedWith(relevanceComparator)
+            .take(5)
+            .map { it.key }
     }
 }
 
-private fun readStrings(): List<String> {
-    val stringsCount = readln().toInt()
-    return List(stringsCount) { readln() }
+fun main() {
+    val searchSystem = SearchSystem()
+
+    // Считывание и добавление документов
+    val documentsCount = readln().toInt()
+    for (docIndex in 0 until documentsCount) {
+        searchSystem.addDocument(readln(), docIndex)
+    }
+
+    // Считывание и обработка запросов
+    val queriesCount = readln().toInt()
+    for (queryIndex in 0 until queriesCount) {
+        val queryResults = searchSystem.processQuery(readln())
+        println(queryResults.joinToString(" ") { (it + 1).toString() })
+    }
 }

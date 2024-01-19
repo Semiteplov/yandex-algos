@@ -1,9 +1,10 @@
 package sprint4.finals
 
 import java.io.BufferedWriter
+import java.lang.Math.floorMod
 
 /*
-    Report: https://contest.yandex.ru/contest/24414/run-report/105209349/
+    Report: https://contest.yandex.ru/contest/24414/run-report/105315573/
 
     Класс HashTable реализует хеш-таблицу для хранения пар ключ-значение.
 
@@ -12,8 +13,8 @@ import java.io.BufferedWriter
     Каждый элемент массива 'table' является головой связанного списка (цепочки) узлов 'Node'.
     Каждый 'Node' содержит ключ, значение и ссылку на следующий узел в цепочке.
     Ключи хешируются функцией 'getIndex', которая обеспечивает равномерное распределение по хеш-таблице.
-    Для поллучения хэша (индекса) используется функция (key % MAX_TABLE_SIZE + MAX_TABLE_SIZE) % MAX_TABLE_SIZE,
-    которая гарантирует, что (хэш) индекс будет лежать в [0, MAX_TABLE_SIZE), даже если ключ < 0.
+    Для поллучения хэша (индекса) используется функция Math.floorMod,
+    которая гарантирует, что (хэш) индекс будет лежать в [0, tableSize), даже если ключ < 0.
 
     -- ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ --
     Алгоритм гарантирует уникальность индекса каждого ключа в таблице или его добавление в список узлов,
@@ -27,78 +28,71 @@ import java.io.BufferedWriter
     -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
     Пространственная сложность составляет O(n), где n — общее количество сохраненных ключей.
  */
-class HashTable {
-    companion object {
-        const val MAX_TABLE_SIZE = 100003
-    }
+class HashTable(private val tableSize: Int = 100003) {
 
     private data class Node(val key: Int, var value: Int, var next: Node? = null)
 
-    private val table = arrayOfNulls<Node>(MAX_TABLE_SIZE)
+    private val table = arrayOfNulls<Node>(tableSize)
 
     private fun getIndex(key: Int): Int {
-        return (key % MAX_TABLE_SIZE + MAX_TABLE_SIZE) % MAX_TABLE_SIZE
+        return floorMod(key, tableSize)
+    }
+
+    private fun <T> findNode(key: Int, action: (node: Node?, previousNode: Node?, bucketIndex: Int) -> T): T {
+        val index = getIndex(key)
+        var current = table[index]
+        var previous: Node? = null
+
+        while (current != null) {
+            if (current.key == key) {
+                break
+            }
+            previous = current
+            current = current.next
+        }
+
+        return action(current, previous, index)
     }
 
     fun put(key: Int, value: Int) {
-        val index = getIndex(key)
-        var current = table[index]
-
-        while (current != null) {
-            if (current.key == key) {
-                current.value = value
-                return
+        findNode(key) { currentNode, _, index ->
+            if (currentNode != null) {
+                currentNode.value = value
+            } else {
+                table[index] = Node(key, value, table[index])
             }
-            current = current.next
         }
-
-        table[index] = Node(key, value, table[index])
     }
 
     fun get(key: Int): Int? {
-        val index = getIndex(key)
-        var current = table[index]
-
-        while (current != null) {
-            if (current.key == key) return current.value
-            current = current.next
+        return findNode(key) { currentNode, _, _ ->
+            currentNode?.value
         }
-
-        return null
     }
 
     fun delete(key: Int): Int? {
-        val index = getIndex(key)
-        var current = table[index]
-        var previos: Node? = null
-
-        while (current != null) {
-            if (current.key == key) {
-                if (previos == null) {
-                    table[index] = current.next
+        return findNode(key) { currentNode, previousNode, index ->
+            currentNode?.let {
+                if (previousNode == null) {
+                    table[index] = currentNode.next
                 } else {
-                    previos.next = current.next
+                    previousNode.next = currentNode.next
                 }
-
-                return current.value
+                currentNode.value
             }
-
-            previos = current
-            current = current.next
         }
-
-        return null
     }
 }
 
 fun main() {
     val writer = System.out.bufferedWriter()
-    val commandsCount = readln().toInt()
+    val reader = System.`in`.bufferedReader()
+    val commandsCount = reader.readLine().toInt()
     if (commandsCount == 0) return
 
     val hashTable = HashTable()
     repeat(commandsCount) {
-        val command = readln().split(" ")
+        val command = reader.readLine().split(" ")
         val operation = command[0]
         val key = command[1].toInt()
 
@@ -117,6 +111,6 @@ fun main() {
 }
 
 fun BufferedWriter.writeLine(line: String) {
-    this.write(line)
-    this.newLine()
+    write(line)
+    newLine()
 }
