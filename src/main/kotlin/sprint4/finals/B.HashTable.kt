@@ -1,7 +1,6 @@
 package sprint4.finals
 
 import java.io.BufferedWriter
-import java.lang.Math.floorMod
 
 /*
     Report: https://contest.yandex.ru/contest/24414/run-report/105315573/
@@ -35,7 +34,7 @@ class HashTable(private val tableSize: Int = 100003) {
     private val table = arrayOfNulls<Node>(tableSize)
 
     private fun getIndex(key: Int): Int {
-        return floorMod(key, tableSize)
+        return key.mod(tableSize)
     }
 
     private fun <T> findNode(key: Int, action: (node: Node?, previousNode: Node?, bucketIndex: Int) -> T): T {
