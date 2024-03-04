@@ -1,7 +1,7 @@
 package sprint5.finals
 
 /*
-    https://contest.yandex.ru/contest/24810/run-report/107584473/
+    https://contest.yandex.ru/contest/24810/run-report/107740621/
 
     -- ПРИНЦИП РАБОТЫ --
     Функция удаления узла из бинарного дерева поиска обрабатывает три основных случая:
@@ -42,20 +42,19 @@ fun remove(root: Node?, key: Int): Node? {
             if (root.right == null) return root.left
 
             var parentOfMin = root
-            var minNode = root.right
-            while (minNode?.left != null) {
-                parentOfMin = minNode
-                minNode = minNode.left
+            var rightNode = root.right ?: return null
+
+            while (rightNode.left != null) {
+                parentOfMin = rightNode
+                rightNode = rightNode.left!!
             }
 
-            minNode?.let {
-                root.value = it.value
+            root.value = rightNode.value
 
-                if (parentOfMin == root) {
-                    parentOfMin.right = it.right
-                } else {
-                    parentOfMin?.left = it.right
-                }
+            if (parentOfMin == root) {
+                parentOfMin.right = rightNode.right
+            } else {
+                parentOfMin?.left = rightNode.right
             }
         }
     }
