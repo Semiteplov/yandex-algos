@@ -1,7 +1,7 @@
 package sprint6.finals
 
 /*
-    https://contest.yandex.ru/contest/25070/run-report/108569152/
+    https://contest.yandex.ru/contest/25070/run-report/108994498/
 
     Этот код реализует алгоритм поиска максимального остовного дерева в графе, используя модифицированный алгоритм Краскала.
     Использование Алгоритма Прима не подходило по ограничению по времени.
@@ -14,8 +14,8 @@ package sprint6.finals
 
     -- ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ --
     Алгоритм гарантирует, что каждое добавленное ребро увеличивает вес остовного дерева на максимально возможную величину,
-    не создавая при этом циклов. Это обеспечивает нахождение максимального остовного дерева, поскольку любое другое дерево
-    будет иметь меньший вес из-за выбора рёбер с меньшим весом.
+    не создавая при этом циклов. Проверка на условие `edgesIncluded == verticesCount - 1` обеспечивает, что построенное
+    дерево является остовным: оно охватывает все вершины графа, содержит `V - 1` рёбер.
 
     -- ВРЕМЕННАЯ СЛОЖНОСТЬ --
     Временная сложность алгоритма составляет O(E log E + E log V), где E - количество рёбер в графе, а V - количество вершин.
@@ -28,28 +28,23 @@ package sprint6.finals
 
     Если граф несвязный и невозможно построить остовное дерево, охватывающее все вершины, выводится сообщение "Oops! I did it again".
  */
-data class Vertex(val vertex: Int)
+typealias Vertex = Int
+
 data class Edge(val start: Vertex, val end: Vertex, val weight: Int) : Comparable<Edge> {
     override fun compareTo(other: Edge): Int = other.weight.compareTo(weight)
 }
 
-class Graph(val vertices: MutableList<Vertex> = mutableListOf(), val edges: MutableList<Edge> = mutableListOf())
+class Graph(val edges: MutableList<Edge> = mutableListOf())
 
 fun main() {
     val reader = System.`in`.bufferedReader()
     val (verticesCount, edgesCount) = reader.readLine().split(" ").map { it.toInt() }
 
-    if (verticesCount < 2) return println(0)
-
     val graph = Graph()
-
-    for (v in 1 until verticesCount + 1) {
-        graph.vertices += Vertex(v)
-    }
 
     repeat(edgesCount) {
         val (u, v, w) = reader.readLine().split(" ").map { it.toInt() }
-        graph.edges += Edge(Vertex(u), Vertex(v), w)
+        graph.edges += Edge(u, v, w)
     }
 
     val mstWeight = findMaximumSpanningTree(graph, verticesCount)
@@ -57,7 +52,7 @@ fun main() {
 }
 
 fun findMaximumSpanningTree(graph: Graph, verticesCount: Int): Int? {
-    val parent = IntArray(verticesCount + 1) { it }
+    val dsu = DisjointSetUnion(verticesCount + 1)
 
     val sortedEdges = graph.edges.sorted()
 
@@ -65,11 +60,11 @@ fun findMaximumSpanningTree(graph: Graph, verticesCount: Int): Int? {
     var edgesIncluded = 0
 
     for (edge in sortedEdges) {
-        val rootStart = find(edge.start.vertex, parent)
-        val rootEnd = find(edge.end.vertex, parent)
+        val rootStart = dsu.find(edge.start)
+        val rootEnd = dsu.find(edge.end)
 
         if (rootStart != rootEnd) {
-            union(rootStart, rootEnd, parent)
+            dsu.union(rootStart, rootEnd)
             weightSum += edge.weight
             edgesIncluded++
         }
@@ -78,14 +73,30 @@ fun findMaximumSpanningTree(graph: Graph, verticesCount: Int): Int? {
     return if (edgesIncluded == verticesCount - 1) weightSum else null
 }
 
-fun find(x: Int, parent: IntArray): Int {
-    if (x != parent[x]) parent[x] = find(parent[x], parent)
-    return parent[x]
-}
+class DisjointSetUnion(size: Int) {
+    private val parent: IntArray = IntArray(size) { it }
+    private val rank: IntArray = IntArray(size) { 0 }
 
-fun union(x: Int, y: Int, parent: IntArray) {
-    val rootX = find(x, parent)
-    val rootY = find(y, parent)
-    parent[rootX] = rootY
-}
+    fun find(x: Int): Int {
+        if (x != parent[x]) {
+            parent[x] = find(parent[x])
+        }
+        return parent[x]
+    }
 
+    fun union(x: Int, y: Int) {
+        var rootX = find(x)
+        var rootY = find(y)
+        if (rootX != rootY) {
+            if (rank[rootX] < rank[rootY]) {
+                val temp = rootX
+                rootX = rootY
+                rootY = temp
+            }
+            parent[rootY] = rootX
+            if (rank[rootX] == rank[rootY]) {
+                rank[rootX]++
+            }
+        }
+    }
+}
